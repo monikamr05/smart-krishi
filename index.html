@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Krishi Advisor</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Smart Krishi Advisor</h1>
+          <p>Decision support for small and marginal farmers</p>
+        </div>
+        <button class="ghost-btn" id="themeToggle">Toggle Theme</button>
+      </header>
+
+      <nav class="tabs">
+        <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="assistant">Chintak AI</button>
+        <button class="tab" data-tab="community">Community</button>
+      </nav>
+
+      <main>
+        <section class="tab-panel active" id="dashboard">
+          <article class="card hero">
+            <h2>Crop Recommendation Engine</h2>
+            <p>
+              ML insights from soil health, location, weather trend, historical yield,
+              and market demand-supply signals.
+            </p>
+            <div class="npk-form">
+              <div class="field">
+                <label for="nitrogenInput">Nitrogen (N)</label>
+                <div class="voice-field">
+                  <input id="nitrogenInput" type="number" min="0" placeholder="e.g. 62" />
+                  <button class="mic-btn" data-voice-target="nitrogenInput">Mic</button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="phosphorusInput">Phosphorus (P)</label>
+                <div class="voice-field">
+                  <input id="phosphorusInput" type="number" min="0" placeholder="e.g. 38" />
+                  <button class="mic-btn" data-voice-target="phosphorusInput">Mic</button>
+                </div>
+              </div>
+              <div class="field">
+                <label for="potassiumInput">Potassium (K)</label>
+                <div class="voice-field">
+                  <input id="potassiumInput" type="number" min="0" placeholder="e.g. 47" />
+                  <button class="mic-btn" data-voice-target="potassiumInput">Mic</button>
+                </div>
+              </div>
+              <button id="recommendBtn">Recommend Crop</button>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>Suitable Crops (Based on Your NPK)</h3>
+            <p id="npkHint" class="muted">Enter NPK values to see the best matching crops.</p>
+            <div class="list" id="cropResults">
+              <div class="list-item">
+                <div>
+                  <h4>Millet</h4>
+                  <p>Balanced choice for medium NPK and low water zones</p>
+                </div>
+                <strong>Sample</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>Location & Weather Snapshot</h3>
+            <p class="muted">Detected Region: Ahmednagar, Maharashtra</p>
+            <div class="weather-grid">
+              <div class="weather-box">
+                <span>Rainfall</span>
+                <strong>18 mm</strong>
+                <small>Next 3 days</small>
+              </div>
+              <div class="weather-box">
+                <span>Temperature</span>
+                <strong>31°C</strong>
+                <small>Daytime average</small>
+              </div>
+              <div class="weather-box">
+                <span>Soil Moisture</span>
+                <strong>64%</strong>
+                <small>Field estimate</small>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="tab-panel" id="assistant">
+          <article class="card">
+            <h2>Chintak AI Assistant</h2>
+            <p>
+              Ask about irrigation schedules, fertilizer dosage, disease prevention,
+              weather planning, and market timing.
+            </p>
+            <p class="muted">
+              AI responses now come from backend API (`/api/assistant`) using secure
+              server-side Gemini key.
+            </p>
+            <div class="assistant-input-wrap">
+              <div class="voice-field">
+                <input
+                  id="assistantInput"
+                  type="text"
+                  placeholder="Type or speak your farming question..."
+                />
+                <button class="mic-btn" data-voice-target="assistantInput">Mic</button>
+              </div>
+              <button id="askBtn">Ask Chintak</button>
+            </div>
+            <div class="ai-response" id="assistantResponse">
+              <h4>Sample response</h4>
+              <p>
+                For expected rainfall this week, split nitrogen dose into two rounds
+                to reduce nutrient loss and improve plant uptake.
+              </p>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2>Disease Detection (Leaf / Fruit)</h2>
+            <p>
+              Upload a crop leaf or fruit image to identify possible disease and get
+              quick treatment suggestions.
+            </p>
+            <div class="disease-grid">
+              <div class="field">
+                <label for="diseasePartSelect">Image Type</label>
+                <select id="diseasePartSelect">
+                  <option value="leaf">Leaf</option>
+                  <option value="fruit">Fruit</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="diseaseImageInput">Upload Image</label>
+                <input id="diseaseImageInput" type="file" accept="image/*" />
+                <input
+                  id="diseaseCameraInput"
+                  class="hidden"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                />
+                <button id="cameraCaptureBtn" type="button">Capture From Device Camera</button>
+                <div id="cameraBox" class="camera-box hidden">
+                  <video id="cameraVideo" autoplay playsinline muted></video>
+                  <div class="camera-actions">
+                    <button id="takePhotoBtn" type="button">Take Photo</button>
+                    <button id="closeCameraBtn" type="button">Close Camera</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <img id="diseasePreview" class="disease-preview hidden" alt="Disease preview" />
+            <button id="detectDiseaseBtn">Detect Disease</button>
+            <div class="ai-response" id="diseaseResponse">
+              <h4>Detection result</h4>
+              <p>Upload an image and click detect.</p>
+            </div>
+          </article>
+        </section>
+
+        <section class="tab-panel" id="community">
+          <article class="card">
+            <h2>Farmer Community Forum</h2>
+            <p>Share practical field experiences and get local advice in real-time.</p>
+            <div id="chatFeed" class="chat-feed">
+              <div class="post">
+                <strong>Ravi, Nashik</strong>
+                <p>Anyone using drip irrigation for summer onion?</p>
+              </div>
+              <div class="post">
+                <strong>Meena, Satara</strong>
+                <p>Best natural spray for whiteflies in cotton crop?</p>
+              </div>
+            </div>
+            <div class="chat-box">
+              <input id="chatInput" type="text" placeholder="Share your message..." />
+              <button id="chatSendBtn">Send</button>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
