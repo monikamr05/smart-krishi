@@ -25,6 +25,9 @@ npm run dev
 
 Backend runs on `http://localhost:4000`.
 
+open https://smart-krishi--monikagowda795.replit.app in your browser
+
+
 ## API endpoints
 
 - `GET /api/health`
