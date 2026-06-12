@@ -10,84 +10,99 @@
     <div class="app-shell">
       <header class="topbar">
         <div>
-          <h1>Smart Krishi Advisor</h1>
-          <p>Decision support for small and marginal farmers</p>
+          <h1 data-i18n="appName">Smart Krishi Advisor</h1>
+          <p data-i18n="appSubtitle">Decision support for small and marginal farmers</p>
         </div>
-        <button class="ghost-btn" id="themeToggle">Toggle Theme</button>
+        <div class="header-controls">
+          <select id="langSelect" class="lang-select">
+            <option value="en-IN">English</option>
+            <option value="hi-IN">हिंदी (Hindi)</option>
+            <option value="mr-IN">मराठी (Marathi)</option>
+            <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
+            <option value="te-IN">తెలుగు (Telugu)</option>
+            <option value="ta-IN">தமிழ் (Tamil)</option>
+            <option value="gu-IN">ગુજરાતી (Gujarati)</option>
+            <option value="bn-IN">বাংলা (Bengali)</option>
+            <option value="pa-IN">ਪੰਜਾਬੀ (Punjabi)</option>
+          </select>
+          <a href="/admin.html" id="adminLink" class="ghost-btn hidden" data-i18n="adminLink" style="text-decoration:none;display:none">Admin</a>
+          <button class="ghost-btn" id="logoutBtn" data-i18n="logoutBtn">Logout</button>
+          <button class="ghost-btn" id="themeToggle" data-i18n="toggleTheme">Toggle Theme</button>
+        </div>
       </header>
 
       <nav class="tabs">
-        <button class="tab active" data-tab="dashboard">Dashboard</button>
-        <button class="tab" data-tab="assistant">Chintak AI</button>
-        <button class="tab" data-tab="community">Community</button>
+        <button class="tab active" data-tab="dashboard" data-i18n="tabDashboard">Dashboard</button>
+        <button class="tab" data-tab="assistant" data-i18n="tabAssistant">Chintak AI</button>
+        <button class="tab" data-tab="community" data-i18n="tabCommunity">Community</button>
       </nav>
 
       <main>
         <section class="tab-panel active" id="dashboard">
           <article class="card hero">
-            <h2>Crop Recommendation Engine</h2>
-            <p>
+            <h2 data-i18n="cropEngineTitle">Crop Recommendation Engine</h2>
+            <p data-i18n="cropEngineDesc">
               ML insights from soil health, location, weather trend, historical yield,
               and market demand-supply signals.
             </p>
             <div class="npk-form">
               <div class="field">
-                <label for="nitrogenInput">Nitrogen (N)</label>
+                <label for="nitrogenInput" data-i18n="labelNitrogen">Nitrogen (N)</label>
                 <div class="voice-field">
-                  <input id="nitrogenInput" type="number" min="0" placeholder="e.g. 62" />
-                  <button class="mic-btn" data-voice-target="nitrogenInput">Mic</button>
+                  <input id="nitrogenInput" type="number" min="0" placeholder="e.g. 62" data-i18n-placeholder="phNitrogen" />
+                  <button class="mic-btn" data-voice-target="nitrogenInput" data-i18n="mic">Mic</button>
                 </div>
               </div>
               <div class="field">
-                <label for="phosphorusInput">Phosphorus (P)</label>
+                <label for="phosphorusInput" data-i18n="labelPhosphorus">Phosphorus (P)</label>
                 <div class="voice-field">
-                  <input id="phosphorusInput" type="number" min="0" placeholder="e.g. 38" />
-                  <button class="mic-btn" data-voice-target="phosphorusInput">Mic</button>
+                  <input id="phosphorusInput" type="number" min="0" placeholder="e.g. 38" data-i18n-placeholder="phPhosphorus" />
+                  <button class="mic-btn" data-voice-target="phosphorusInput" data-i18n="mic">Mic</button>
                 </div>
               </div>
               <div class="field">
-                <label for="potassiumInput">Potassium (K)</label>
+                <label for="potassiumInput" data-i18n="labelPotassium">Potassium (K)</label>
                 <div class="voice-field">
-                  <input id="potassiumInput" type="number" min="0" placeholder="e.g. 47" />
-                  <button class="mic-btn" data-voice-target="potassiumInput">Mic</button>
+                  <input id="potassiumInput" type="number" min="0" placeholder="e.g. 47" data-i18n-placeholder="phPotassium" />
+                  <button class="mic-btn" data-voice-target="potassiumInput" data-i18n="mic">Mic</button>
                 </div>
               </div>
-              <button id="recommendBtn">Recommend Crop</button>
+              <button id="recommendBtn" data-i18n="btnRecommend">Recommend Crop</button>
             </div>
           </article>
 
           <article class="card">
-            <h3>Suitable Crops (Based on Your NPK)</h3>
-            <p id="npkHint" class="muted">Enter NPK values to see the best matching crops.</p>
+            <h3 data-i18n="suitableCropsTitle">Suitable Crops (Based on Your NPK)</h3>
+            <p id="npkHint" class="muted" data-i18n="npkHintDefault">Enter NPK values to see the best matching crops.</p>
             <div class="list" id="cropResults">
               <div class="list-item">
                 <div>
-                  <h4>Millet</h4>
-                  <p>Balanced choice for medium NPK and low water zones</p>
+                  <h4 data-i18n="sampleCropName">Millet</h4>
+                  <p data-i18n="sampleCropDesc">Balanced choice for medium NPK and low water zones</p>
                 </div>
-                <strong>Sample</strong>
+                <strong data-i18n="sampleLabel">Sample</strong>
               </div>
             </div>
           </article>
 
           <article class="card">
-            <h3>Location & Weather Snapshot</h3>
-            <p class="muted">Detected Region: Ahmednagar, Maharashtra</p>
+            <h3 data-i18n="weatherTitle">Location &amp; Weather Snapshot</h3>
+            <p class="muted" data-i18n="detectedRegion">Detected Region: Ahmednagar, Maharashtra</p>
             <div class="weather-grid">
               <div class="weather-box">
-                <span>Rainfall</span>
+                <span data-i18n="rainfall">Rainfall</span>
                 <strong>18 mm</strong>
-                <small>Next 3 days</small>
+                <small data-i18n="next3days">Next 3 days</small>
               </div>
               <div class="weather-box">
-                <span>Temperature</span>
+                <span data-i18n="temperature">Temperature</span>
                 <strong>31°C</strong>
-                <small>Daytime average</small>
+                <small data-i18n="daytimeAvg">Daytime average</small>
               </div>
               <div class="weather-box">
-                <span>Soil Moisture</span>
+                <span data-i18n="soilMoisture">Soil Moisture</span>
                 <strong>64%</strong>
-                <small>Field estimate</small>
+                <small data-i18n="fieldEstimate">Field estimate</small>
               </div>
             </div>
           </article>
@@ -95,14 +110,10 @@
 
         <section class="tab-panel" id="assistant">
           <article class="card">
-            <h2>Chintak AI Assistant</h2>
-            <p>
+            <h2 data-i18n="assistantTitle">Chintak AI Assistant</h2>
+            <p data-i18n="assistantDesc">
               Ask about irrigation schedules, fertilizer dosage, disease prevention,
               weather planning, and market timing.
-            </p>
-            <p class="muted">
-              AI responses now come from backend API (`/api/assistant`) using secure
-              server-side Gemini key.
             </p>
             <div class="assistant-input-wrap">
               <div class="voice-field">
@@ -110,14 +121,15 @@
                   id="assistantInput"
                   type="text"
                   placeholder="Type or speak your farming question..."
+                  data-i18n-placeholder="assistantPlaceholder"
                 />
-                <button class="mic-btn" data-voice-target="assistantInput">Mic</button>
+                <button class="mic-btn" data-voice-target="assistantInput" data-i18n="mic">Mic</button>
               </div>
-              <button id="askBtn">Ask Chintak</button>
+              <button id="askBtn" data-i18n="btnAsk">Ask Chintak</button>
             </div>
             <div class="ai-response" id="assistantResponse">
-              <h4>Sample response</h4>
-              <p>
+              <h4 data-i18n="sampleResponseTitle">Sample response</h4>
+              <p data-i18n="sampleResponseText">
                 For expected rainfall this week, split nitrogen dose into two rounds
                 to reduce nutrient loss and improve plant uptake.
               </p>
@@ -125,21 +137,21 @@
           </article>
 
           <article class="card">
-            <h2>Disease Detection (Leaf / Fruit)</h2>
-            <p>
+            <h2 data-i18n="diseaseTitle">Disease Detection (Leaf / Fruit)</h2>
+            <p data-i18n="diseaseDesc">
               Upload a crop leaf or fruit image to identify possible disease and get
               quick treatment suggestions.
             </p>
             <div class="disease-grid">
               <div class="field">
-                <label for="diseasePartSelect">Image Type</label>
+                <label for="diseasePartSelect" data-i18n="imageTypeLabel">Image Type</label>
                 <select id="diseasePartSelect">
-                  <option value="leaf">Leaf</option>
-                  <option value="fruit">Fruit</option>
+                  <option value="leaf" data-i18n="optLeaf">Leaf</option>
+                  <option value="fruit" data-i18n="optFruit">Fruit</option>
                 </select>
               </div>
               <div class="field">
-                <label for="diseaseImageInput">Upload Image</label>
+                <label for="diseaseImageInput" data-i18n="uploadImageLabel">Upload Image</label>
                 <input id="diseaseImageInput" type="file" accept="image/*" />
                 <input
                   id="diseaseCameraInput"
@@ -148,29 +160,29 @@
                   accept="image/*"
                   capture="environment"
                 />
-                <button id="cameraCaptureBtn" type="button">Capture From Device Camera</button>
+                <button id="cameraCaptureBtn" type="button" data-i18n="btnCapture">Capture From Device Camera</button>
                 <div id="cameraBox" class="camera-box hidden">
                   <video id="cameraVideo" autoplay playsinline muted></video>
                   <div class="camera-actions">
-                    <button id="takePhotoBtn" type="button">Take Photo</button>
-                    <button id="closeCameraBtn" type="button">Close Camera</button>
+                    <button id="takePhotoBtn" type="button" data-i18n="btnTakePhoto">Take Photo</button>
+                    <button id="closeCameraBtn" type="button" data-i18n="btnCloseCamera">Close Camera</button>
                   </div>
                 </div>
               </div>
             </div>
             <img id="diseasePreview" class="disease-preview hidden" alt="Disease preview" />
-            <button id="detectDiseaseBtn">Detect Disease</button>
+            <button id="detectDiseaseBtn" data-i18n="btnDetect">Detect Disease</button>
             <div class="ai-response" id="diseaseResponse">
-              <h4>Detection result</h4>
-              <p>Upload an image and click detect.</p>
+              <h4 data-i18n="detectionResult">Detection result</h4>
+              <p data-i18n="uploadPrompt">Upload an image and click detect.</p>
             </div>
           </article>
         </section>
 
         <section class="tab-panel" id="community">
           <article class="card">
-            <h2>Farmer Community Forum</h2>
-            <p>Share practical field experiences and get local advice in real-time.</p>
+            <h2 data-i18n="forumTitle">Farmer Community Forum</h2>
+            <p data-i18n="forumDesc">Share practical field experiences and get local advice in real-time.</p>
             <div id="chatFeed" class="chat-feed">
               <div class="post">
                 <strong>Ravi, Nashik</strong>
@@ -182,14 +194,15 @@
               </div>
             </div>
             <div class="chat-box">
-              <input id="chatInput" type="text" placeholder="Share your message..." />
-              <button id="chatSendBtn">Send</button>
+              <input id="chatInput" type="text" placeholder="Share your message..." data-i18n-placeholder="chatPlaceholder" />
+              <button id="chatSendBtn" data-i18n="btnSend">Send</button>
             </div>
           </article>
         </section>
       </main>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

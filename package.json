@@ -3,16 +3,18 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
+    "start": "node src/server.js",
+    "expo": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "backend": "npm --prefix backend run dev",
-    "backend:start": "npm --prefix backend run start"
+    "web": "expo start --web"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "expo": "~54.0.33",
     "expo-status-bar": "~3.0.9",
+    "express": "^5.2.1",
     "react": "19.1.0",
     "react-native": "0.81.5"
   },

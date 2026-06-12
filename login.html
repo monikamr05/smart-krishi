@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Smart Krishi Advisor</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .login-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .login-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        width: min(400px, 100%);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+      }
+      .login-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-bottom: 0.4rem;
+      }
+      .login-logo-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--accent);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+      }
+      .login-logo h1 {
+        font-size: 1.25rem;
+        margin: 0;
+        color: var(--text);
+      }
+      .login-subtitle {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin: 0 0 2rem 0;
+      }
+      .login-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+      }
+      .login-field label {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .login-field input {
+        width: 100%;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text);
+        padding: 0.8rem 1rem;
+        font-size: 0.95rem;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .login-field input:focus {
+        border-color: var(--accent);
+      }
+      .login-btn {
+        width: 100%;
+        background: var(--accent);
+        color: var(--accent-dark);
+        border: none;
+        border-radius: 12px;
+        padding: 0.85rem;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        transition: opacity 0.2s;
+        font-family: inherit;
+      }
+      .login-btn:hover { opacity: 0.88; }
+      .login-error {
+        background: #450a0a;
+        border: 1px solid #991b1b;
+        color: #fca5a5;
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        font-size: 0.88rem;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .login-error.visible { display: block; }
+      .demo-accounts {
+        margin-top: 1.8rem;
+        padding-top: 1.2rem;
+        border-top: 1px solid var(--border);
+      }
+      .demo-accounts p {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin: 0 0 0.6rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .demo-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      .demo-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 0.55rem 0.7rem;
+        font-size: 0.82rem;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+        line-height: 1.4;
+      }
+      .demo-btn:hover { border-color: var(--accent); }
+      .demo-btn strong { display: block; color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div class="login-page">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="login-logo-icon">🌾</div>
+          <h1>Smart Krishi Advisor</h1>
+        </div>
+        <p class="login-subtitle">Decision support for small and marginal farmers</p>
+
+        <div class="login-error" id="loginError">Invalid username or password.</div>
+
+        <form id="loginForm">
+          <div class="login-field">
+            <label for="usernameInput">Username</label>
+            <input id="usernameInput" type="text" placeholder="Enter your username" autocomplete="username" required />
+          </div>
+          <div class="login-field">
+            <label for="passwordInput">Password</label>
+            <input id="passwordInput" type="password" placeholder="Enter your password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <div class="demo-accounts">
+          <p>Demo Accounts</p>
+          <div class="demo-row">
+            <button class="demo-btn" onclick="fillDemo('admin','krishi123')">
+              <strong>Admin</strong>
+              admin / krishi123
+            </button>
+            <button class="demo-btn" onclick="fillDemo('farmer','krishi123')">
+              <strong>Farmer</strong>
+              farmer / krishi123
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const ACCOUNTS = {
+        admin: { password: "krishi123", role: "admin", displayName: "Admin" },
+        farmer: { password: "krishi123", role: "farmer", displayName: "Farmer" },
+        ravi: { password: "krishi123", role: "farmer", displayName: "Ravi, Nashik" },
+        meena: { password: "krishi123", role: "farmer", displayName: "Meena, Satara" },
+      };
+
+      if (localStorage.getItem("krishi_session")) {
+        window.location.href = "/";
+      }
+
+      function fillDemo(user, pass) {
+        document.getElementById("usernameInput").value = user;
+        document.getElementById("passwordInput").value = pass;
+      }
+
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const username = document.getElementById("usernameInput").value.trim().toLowerCase();
+        const password = document.getElementById("passwordInput").value;
+        const errorEl = document.getElementById("loginError");
+
+        const account = ACCOUNTS[username];
+        if (!account || account.password !== password) {
+          errorEl.classList.add("visible");
+          return;
+        }
+
+        errorEl.classList.remove("visible");
+        localStorage.setItem("krishi_session", JSON.stringify({
+          username,
+          role: account.role,
+          displayName: account.displayName,
+          loginTime: Date.now(),
+        }));
+        window.location.href = "/";
+      });
+    </script>
+  </body>
+</html>

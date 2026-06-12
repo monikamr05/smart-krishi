@@ -1,0 +1,6 @@
+
+> smart_agri_advisor@1.0.0 start
+> node src/server.js
+
+[1G[0K◇ injected env (0) from .env [2m// tip: ⌘ custom filepath { path: '/custom/path/.env' }[0m
+Backend running on http://localhost:5000

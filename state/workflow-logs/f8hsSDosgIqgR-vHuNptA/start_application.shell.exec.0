@@ -1,0 +1,6 @@
+[1G[0K⠙[1G[0K
+> smart_agri_advisor@1.0.0 start
+> node src/server.js
+
+[1G[0K⠙[1G[0K◇ injected env (0) from .env [2m// tip: ⌘ enable debugging { debug: true }[0m
+Backend running on http://localhost:5000

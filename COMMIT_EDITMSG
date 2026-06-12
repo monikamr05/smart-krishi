@@ -1,0 +1,10 @@
+Add login and admin dashboard pages with multilingual support
+
+Introduce new `login.html` and `admin.html` pages, implement authentication with localStorage, add admin dashboard functionality, enhance AI responses, and integrate multilingual support across the application.
+
+Replit-Commit-Author: Agent
+Replit-Commit-Session-Id: 23c9336b-1a4d-40c1-8200-7d4a79de5363
+Replit-Commit-Checkpoint-Type: full_checkpoint
+Replit-Commit-Event-Id: badd6483-5be4-45d9-9842-38ece81d7f90
+Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/f48d3e09-9a22-4d96-85c3-97e5836f621d/23c9336b-1a4d-40c1-8200-7d4a79de5363/cfHplGZ
+Replit-Helium-Checkpoint-Created: true

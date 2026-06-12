@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard — Smart Krishi Advisor</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .admin-shell {
+        width: min(1200px, 94%);
+        margin: 0 auto;
+        padding: 1.5rem 0 3rem;
+      }
+      .admin-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1.2rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .admin-title {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+      }
+      .admin-badge {
+        background: #7c3aed;
+        color: #fff;
+        border-radius: 8px;
+        padding: 0.25rem 0.65rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .admin-topbar h1 { margin: 0; font-size: 1.5rem; }
+      .admin-topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+      }
+      .admin-user-chip {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 0.4rem 0.9rem;
+        font-size: 0.83rem;
+        color: var(--muted);
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.2rem 1rem;
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--accent);
+        line-height: 1;
+        margin-bottom: 0.35rem;
+      }
+      .stat-label {
+        font-size: 0.83rem;
+        color: var(--muted);
+      }
+      .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 1.5rem 0 0.8rem;
+      }
+      .admin-table {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+      }
+      .admin-table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .admin-table th {
+        background: var(--surface-2);
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      .admin-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        vertical-align: top;
+      }
+      .admin-table tr:last-child td { border-bottom: none; }
+      .admin-table tr:hover td { background: var(--surface-2); }
+      .tag {
+        display: inline-block;
+        border-radius: 6px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .tag-admin { background: #4c1d95; color: #c4b5fd; }
+      .tag-farmer { background: #052e16; color: #6ee7b7; }
+      .tag-online { background: #14532d; color: #86efac; }
+      .msg-text { color: var(--muted); font-size: 0.88rem; max-width: 420px; }
+      .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .actions-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .act-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.4rem 0.85rem;
+        font-size: 0.82rem;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 600;
+      }
+      .act-btn:hover { border-color: var(--accent); color: var(--accent); }
+      .act-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+      .nav-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.5rem 0.9rem;
+        background: var(--surface);
+        margin-bottom: 1rem;
+        display: inline-flex;
+      }
+      .nav-back:hover { border-color: var(--accent); color: var(--accent); }
+      .refresh-note {
+        color: var(--muted);
+        font-size: 0.78rem;
+        margin-left: 0.5rem;
+      }
+      .green { color: var(--accent); }
+      @media (max-width: 640px) {
+        .admin-topbar { flex-direction: column; align-items: flex-start; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .admin-table { overflow-x: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <a href="/" class="nav-back">← Back to App</a>
+
+      <div class="admin-topbar">
+        <div class="admin-title">
+          <div>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.2rem">
+              <h1>Admin Dashboard</h1>
+              <span class="admin-badge">Admin</span>
+            </div>
+            <p style="margin:0;color:var(--muted);font-size:0.85rem">Smart Krishi Advisor — Management Console</p>
+          </div>
+        </div>
+        <div class="admin-topbar-right">
+          <span class="admin-user-chip" id="adminUserChip">Admin</span>
+          <button class="ghost-btn" onclick="doLogout()">Logout</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-value" id="statMessages">—</div>
+          <div class="stat-label">Community Messages</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statUsers">4</div>
+          <div class="stat-label">Registered Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statCrops">8</div>
+          <div class="stat-label">Crop Profiles</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value green">✓</div>
+          <div class="stat-label">API Status</div>
+        </div>
+      </div>
+
+      <div class="section-title">Registered Users</div>
+      <div class="admin-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Display Name</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td><strong>admin</strong></td>
+              <td>Admin</td>
+              <td><span class="tag tag-admin">Admin</span></td>
+              <td><span class="tag tag-online">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>farmer</strong></td>
+              <td>Farmer</td>
+              <td><span class="tag tag-farmer">Farmer</span></td>
+              <td><span class="tag tag-online">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>ravi</strong></td>
+              <td>Ravi, Nashik</td>
+              <td><span class="tag tag-farmer">Farmer</span></td>
+              <td><span class="tag tag-online">Active</span></td>
+            </tr>
+            <tr>
+              <td><strong>meena</strong></td>
+              <td>Meena, Satara</td>
+              <td><span class="tag tag-farmer">Farmer</span></td>
+              <td><span class="tag tag-online">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">
+        Community Forum Messages
+        <span class="refresh-note" id="msgCount"></span>
+      </div>
+      <div class="admin-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Author</th>
+              <th>Message</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="messagesTableBody">
+            <tr><td colspan="3" class="empty-state">Loading messages...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Crop Profiles (ML Model)</div>
+      <div class="admin-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Crop</th>
+              <th>N</th>
+              <th>P</th>
+              <th>K</th>
+              <th>Profile</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Wheat</strong></td><td>80</td><td>50</td><td>40</td><td class="msg-text">High nitrogen and moderate phosphorus crop.</td></tr>
+            <tr><td><strong>Rice</strong></td><td>70</td><td>35</td><td>35</td><td class="msg-text">Performs in medium-high nitrogen conditions.</td></tr>
+            <tr><td><strong>Maize</strong></td><td>65</td><td>45</td><td>35</td><td class="msg-text">Balanced nutrient demand with good yield potential.</td></tr>
+            <tr><td><strong>Millet</strong></td><td>45</td><td>25</td><td>25</td><td class="msg-text">Suited for lower input and dryland conditions.</td></tr>
+            <tr><td><strong>Groundnut</strong></td><td>35</td><td>45</td><td>35</td><td class="msg-text">Prefers stronger phosphorus support.</td></tr>
+            <tr><td><strong>Cotton</strong></td><td>55</td><td>30</td><td>60</td><td class="msg-text">Needs higher potassium for boll development.</td></tr>
+            <tr><td><strong>Pigeon Pea</strong></td><td>40</td><td>30</td><td>30</td><td class="msg-text">Legume with moderate nutrient requirements.</td></tr>
+            <tr><td><strong>Sugarcane</strong></td><td>90</td><td>40</td><td>55</td><td class="msg-text">Heavy feeder crop with higher nutrient demand.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-title">System Info</div>
+      <div class="admin-table">
+        <table>
+          <tbody>
+            <tr><td style="color:var(--muted);width:200px">Backend</td><td>Express.js on Node.js</td></tr>
+            <tr><td style="color:var(--muted)">AI Model</td><td>Google Gemini 2.0 Flash</td></tr>
+            <tr><td style="color:var(--muted)">Languages</td><td>English, Hindi, Marathi, Kannada, Telugu, Tamil, Gujarati, Bengali, Punjabi</td></tr>
+            <tr><td style="color:var(--muted)">API Status</td><td id="apiStatusCell"><span class="tag tag-online">Checking...</span></td></tr>
+            <tr><td style="color:var(--muted)">Loaded At</td><td id="loadedAt">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const session = JSON.parse(localStorage.getItem("krishi_session") || "null");
+      if (!session || !session.loggedIn === false) {
+        if (!session) { window.location.href = "/login.html"; }
+      }
+      if (session && session.role !== "admin") {
+        alert("Admin access required.");
+        window.location.href = "/";
+      }
+
+      document.getElementById("adminUserChip").textContent = session ? session.displayName : "Admin";
+      document.getElementById("loadedAt").textContent = new Date().toLocaleString();
+
+      function doLogout() {
+        localStorage.removeItem("krishi_session");
+        window.location.href = "/login.html";
+      }
+
+      async function loadMessages() {
+        try {
+          const res = await fetch("/api/community/messages");
+          const data = await res.json();
+          const messages = data.messages || [];
+          document.getElementById("statMessages").textContent = messages.length;
+          document.getElementById("msgCount").textContent = `(${messages.length} total)`;
+          const tbody = document.getElementById("messagesTableBody");
+          if (messages.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No messages yet.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = messages.map((m, i) => `
+            <tr id="msg-row-${m.id || i}">
+              <td><strong>${escHtml(m.author || "—")}</strong></td>
+              <td class="msg-text">${escHtml(m.message || "")}</td>
+              <td>
+                <div class="actions-row">
+                  <button class="act-btn danger" onclick="deleteMsg(${m.id || i}, this)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `).join("");
+        } catch {
+          document.getElementById("messagesTableBody").innerHTML =
+            '<tr><td colspan="3" class="empty-state">Failed to load messages.</td></tr>';
+        }
+      }
+
+      async function deleteMsg(id, btn) {
+        try {
+          const res = await fetch(`/api/admin/messages/${id}`, { method: "DELETE" });
+          if (res.ok) {
+            const row = document.getElementById(`msg-row-${id}`);
+            if (row) row.remove();
+            const current = parseInt(document.getElementById("statMessages").textContent) || 0;
+            document.getElementById("statMessages").textContent = Math.max(0, current - 1);
+          } else {
+            alert("Could not delete message.");
+          }
+        } catch {
+          alert("Error deleting message.");
+        }
+      }
+
+      async function checkApiHealth() {
+        try {
+          const res = await fetch("/api/health");
+          const data = await res.json();
+          document.getElementById("apiStatusCell").innerHTML =
+            data.ok
+              ? '<span class="tag tag-online">Online</span>'
+              : '<span class="tag" style="background:#7f1d1d;color:#fca5a5">Offline</span>';
+        } catch {
+          document.getElementById("apiStatusCell").innerHTML =
+            '<span class="tag" style="background:#7f1d1d;color:#fca5a5">Offline</span>';
+        }
+      }
+
+      function escHtml(str) {
+        const d = document.createElement("div");
+        d.innerText = str;
+        return d.innerHTML;
+      }
+
+      loadMessages();
+      checkApiHealth();
+    </script>
+  </body>
+</html>
