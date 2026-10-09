@@ -87,9 +87,19 @@ app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 
 // Serve static frontend files (index.html, style.css, script.js, assets)
-app.use(express.static(path.join(__dirname, "..")));
+// Explicit static routes with correct MIME types
+app.get("/style.css", (_req, res) => {
+  res.type("text/css");
+  res.sendFile(path.join(__dirname, "..", "style.css"));
+});
+
+app.get("/script.js", (_req, res) => {
+  res.type("application/javascript");
+  res.sendFile(path.join(__dirname, "..", "script.js"));
+});
 
 app.get("/", (_req, res) => {
+  res.type("text/html");
   res.sendFile(path.join(__dirname, "..", "index.html"));
 });
 
