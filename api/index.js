@@ -86,6 +86,13 @@ let farmersDatabase = [
 app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 
+// Serve static frontend files (index.html, style.css, script.js, assets)
+app.use(express.static(path.join(__dirname, "..")));
+
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "index.html"));
+});
+
 router.get("/health", (_req, res) => {
   res.json({
     ok: true,
@@ -623,6 +630,16 @@ function parseJsonAnswer(text) {
 
 app.use("/api", router);
 app.use("/", router);
+
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) return next();
+  const filePath = path.join(__dirname, "..", req.path);
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      res.sendFile(path.join(__dirname, "..", "index.html"));
+    }
+  });
+});
 
 app.use((err, _req, res, _next) => {
   if (err?.type === "entity.too.large") {
