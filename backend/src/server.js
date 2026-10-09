@@ -78,7 +78,6 @@ router.post("/assistant", async (req, res) => {
     "Answer ONLY the current farmer question. Do not repeat old answers unless needed.",
     location ? `Farmer location: ${location}.` : "",
     npk ? `Soil values (NPK): N=${npk.n}, P=${npk.p}, K=${npk.k}.` : "",
-    `Request tag: ${requestTag}`,
     `Farmer question: ${query}`,
   ]
     .filter(Boolean)
