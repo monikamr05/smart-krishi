@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 4000;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
 const communityMessages = [
   { id: 1, author: "Ravi, Nashik", message: "Anyone using drip irrigation for summer onion?" },
@@ -220,7 +220,7 @@ router.post("/community/messages", (req, res) => {
 /* ---------------- OPENROUTER HANDLERS ---------------- */
 
 async function callOpenRouterText(prompt, apiKey) {
-  const model = process.env.OPENROUTER_MODEL || OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
+  const model = process.env.OPENROUTER_MODEL || OPENROUTER_MODEL || "google/gemini-2.5-flash";
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -247,7 +247,7 @@ async function callOpenRouterText(prompt, apiKey) {
 }
 
 async function callOpenRouterVision(textPrompt, image, apiKey) {
-  const model = process.env.OPENROUTER_MODEL || OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
+  const model = process.env.OPENROUTER_MODEL || OPENROUTER_MODEL || "google/gemini-2.5-flash";
   const imageUrl = `data:${image.mimeType};base64,${image.data}`;
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
