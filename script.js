@@ -26,9 +26,35 @@ const closeCameraBtn = document.getElementById("closeCameraBtn");
 const diseasePreview = document.getElementById("diseasePreview");
 const detectDiseaseBtn = document.getElementById("detectDiseaseBtn");
 const diseaseResponse = document.getElementById("diseaseResponse");
+const detectedLocation = document.getElementById("detectedLocation");
+
+// Auth Elements
+const authModal = document.getElementById("authModal");
+const openAuthBtn = document.getElementById("openAuthBtn");
+const closeAuthBtn = document.getElementById("closeAuthBtn");
+const tabLoginBtn = document.getElementById("tabLoginBtn");
+const tabRegisterBtn = document.getElementById("tabRegisterBtn");
+const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
+const loginContact = document.getElementById("loginContact");
+const loginPassword = document.getElementById("loginPassword");
+const loginError = document.getElementById("loginError");
+const regName = document.getElementById("regName");
+const regContact = document.getElementById("regContact");
+const regLocation = document.getElementById("regLocation");
+const regCrops = document.getElementById("regCrops");
+const regPassword = document.getElementById("regPassword");
+const regError = document.getElementById("regError");
+const guestLoginBtn = document.getElementById("guestLoginBtn");
+const userProfileBadge = document.getElementById("userProfileBadge");
+const userNameDisplay = document.getElementById("userNameDisplay");
+const logoutBtn = document.getElementById("logoutBtn");
+
 let activeCameraStream = null;
 let selectedDiseaseFile = null;
+let currentUser = null;
 
+// Tab Navigation
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     const target = tab.dataset.tab;
@@ -41,14 +67,23 @@ tabs.forEach((tab) => {
   });
 });
 
+// Initialize Authentication & Load Community Feed
+initAuth();
 loadCommunityMessages();
 
+// Camera & Disease Listeners
 diseaseImageInput.addEventListener("change", () => handleDiseaseFileSelected(diseaseImageInput.files?.[0]));
 diseaseCameraInput.addEventListener("change", () => handleDiseaseFileSelected(diseaseCameraInput.files?.[0]));
 cameraCaptureBtn.addEventListener("click", openDeviceCamera);
 takePhotoBtn.addEventListener("click", capturePhotoFromVideo);
 closeCameraBtn.addEventListener("click", stopDeviceCamera);
 
+// Theme Toggle
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("light");
+});
+
+// Crop Recommendation
 recommendBtn.addEventListener("click", async () => {
   const n = Number(nitrogenInput.value);
   const p = Number(phosphorusInput.value);
@@ -73,7 +108,7 @@ recommendBtn.addEventListener("click", async () => {
     }
 
     npkHint.textContent = `Recommended for N:${n}, P:${p}, K:${k}`;
-    cropResults.innerHTML = data.recommendations
+    cropResults.innerHTML = (data.recommendations || [])
       .map(
         (crop) => `
       <div class="list-item">
@@ -91,6 +126,7 @@ recommendBtn.addEventListener("click", async () => {
   }
 });
 
+// Chintak AI Assistant (English Output)
 askBtn.addEventListener("click", async () => {
   const query = assistantInput.value.trim();
   if (!query) return;
@@ -101,7 +137,7 @@ askBtn.addEventListener("click", async () => {
   `;
 
   try {
-    const location = "Ahmednagar, Maharashtra";
+    const location = currentUser?.location || "Ahmednagar, Maharashtra";
     const npk = {
       n: Number(nitrogenInput.value || 0),
       p: Number(phosphorusInput.value || 0),
@@ -109,29 +145,27 @@ askBtn.addEventListener("click", async () => {
     };
     const reply = await askAssistant(query, location, npk);
     assistantResponse.innerHTML = `
-      <h4>Chintak response</h4>
+      <h4>Chintak AI Advice</h4>
       <p><strong>Your question:</strong> ${escapeHtml(query)}</p>
-      <p>${escapeHtml(reply)}</p>
+      <div style="white-space: pre-wrap; line-height: 1.6; margin-top: 0.5rem;">${escapeHtml(reply)}</div>
     `;
     assistantInput.value = "";
   } catch (error) {
     assistantResponse.innerHTML = `
-      <h4>Gemini error</h4>
+      <h4>Assistant Error</h4>
       <p>${escapeHtml(error.message)}</p>
     `;
   }
 });
 
+// Community Send
 chatSendBtn.addEventListener("click", () => {
   const message = chatInput.value.trim();
   if (!message) return;
   sendCommunityMessage(message);
 });
 
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("light");
-});
-
+// Disease Detection
 detectDiseaseBtn.addEventListener("click", async () => {
   const file = selectedDiseaseFile || diseaseImageInput.files?.[0] || diseaseCameraInput.files?.[0];
   if (!file) {
@@ -176,7 +210,7 @@ detectDiseaseBtn.addEventListener("click", async () => {
       <h4>Detected: ${escapeHtml(data.disease || "Unknown")}</h4>
       <p><strong>Confidence:</strong> ${escapeHtml(data.confidence || "N/A")}</p>
       <p><strong>Explanation:</strong> ${escapeHtml(data.explanation || "No details")}</p>
-      <p><strong>Advice:</strong> ${escapeHtml(data.recommendation || "No recommendation")}</p>
+      <p><strong>Treatment / Advice:</strong> ${escapeHtml(data.recommendation || "No recommendation")}</p>
       ${
         candidatesHtml
           ? `<p><strong>Other likely diseases:</strong></p><ul>${candidatesHtml}</ul>`
@@ -184,24 +218,175 @@ detectDiseaseBtn.addEventListener("click", async () => {
       }
       ${
         data.imageQualityWarning
-          ? `<p><strong>Image quality:</strong> ${escapeHtml(data.imageQualityWarning)}</p>`
+          ? `<p><strong>Image note:</strong> ${escapeHtml(data.imageQualityWarning)}</p>`
           : ""
       }
     `;
   } catch (error) {
     diseaseResponse.innerHTML = `
-      <h4>Disease detection error</h4>
+      <h4>Disease Detection Error</h4>
       <p>${escapeHtml(error.message)}</p>
     `;
   }
 });
 
+// Voice Input Listeners
 micButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const targetId = button.dataset.voiceTarget;
     startVoiceInput(targetId);
   });
 });
+
+/* ---------------- AUTHENTICATION HANDLERS ---------------- */
+
+function initAuth() {
+  const savedUser = localStorage.getItem("krishi_user");
+  if (savedUser) {
+    try {
+      currentUser = JSON.parse(savedUser);
+    } catch {
+      currentUser = null;
+    }
+  }
+
+  updateAuthUI();
+
+  // If first time visit (no user and never dismissed modal), prompt with login modal
+  const hasVisited = localStorage.getItem("krishi_has_visited");
+  if (!currentUser && !hasVisited) {
+    showAuthModal();
+  }
+
+  // Auth Button Listeners
+  openAuthBtn.addEventListener("click", () => showAuthModal());
+  closeAuthBtn.addEventListener("click", () => hideAuthModal());
+  guestLoginBtn.addEventListener("click", () => {
+    localStorage.setItem("krishi_has_visited", "true");
+    hideAuthModal();
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    localStorage.removeItem("krishi_user");
+    updateAuthUI();
+  });
+
+  tabLoginBtn.addEventListener("click", () => {
+    tabLoginBtn.classList.add("active");
+    tabRegisterBtn.classList.remove("active");
+    loginForm.classList.remove("hidden");
+    registerForm.classList.add("hidden");
+    loginError.classList.add("hidden");
+  });
+
+  tabRegisterBtn.addEventListener("click", () => {
+    tabRegisterBtn.classList.add("active");
+    tabLoginBtn.classList.remove("active");
+    registerForm.classList.remove("hidden");
+    loginForm.classList.add("hidden");
+    regError.classList.add("hidden");
+  });
+
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const contact = loginContact.value.trim();
+    const pass = loginPassword.value.trim();
+
+    if (!contact || !pass) {
+      showError(loginError, "Please enter both contact and password.");
+      return;
+    }
+
+    // Check against registered users or create login session
+    const registeredUsers = JSON.parse(localStorage.getItem("krishi_registered_users") || "[]");
+    const existing = registeredUsers.find((u) => u.contact === contact);
+
+    if (existing && existing.password !== pass) {
+      showError(loginError, "Incorrect password or PIN.");
+      return;
+    }
+
+    const user = existing || {
+      name: `Farmer (${contact.slice(-4)})`,
+      contact,
+      location: "Ahmednagar, Maharashtra",
+      crops: "Mixed Crops",
+    };
+
+    currentUser = user;
+    localStorage.setItem("krishi_user", JSON.stringify(user));
+    localStorage.setItem("krishi_has_visited", "true");
+    updateAuthUI();
+    hideAuthModal();
+  });
+
+  registerForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = regName.value.trim();
+    const contact = regContact.value.trim();
+    const location = regLocation.value.trim();
+    const crops = regCrops.value.trim();
+    const password = regPassword.value.trim();
+
+    if (!name || !contact || !location || !password) {
+      showError(regError, "Please fill out all required fields.");
+      return;
+    }
+
+    const newUser = { name, contact, location, crops, password };
+    const registeredUsers = JSON.parse(localStorage.getItem("krishi_registered_users") || "[]");
+    
+    // Check if already registered
+    const idx = registeredUsers.findIndex((u) => u.contact === contact);
+    if (idx !== -1) {
+      registeredUsers[idx] = newUser;
+    } else {
+      registeredUsers.push(newUser);
+    }
+
+    localStorage.setItem("krishi_registered_users", JSON.stringify(registeredUsers));
+    currentUser = newUser;
+    localStorage.setItem("krishi_user", JSON.stringify(newUser));
+    localStorage.setItem("krishi_has_visited", "true");
+    updateAuthUI();
+    hideAuthModal();
+  });
+}
+
+function showAuthModal() {
+  authModal.classList.remove("hidden");
+}
+
+function hideAuthModal() {
+  authModal.classList.add("hidden");
+  loginError.classList.add("hidden");
+  regError.classList.add("hidden");
+}
+
+function showError(elem, msg) {
+  elem.textContent = msg;
+  elem.classList.remove("hidden");
+}
+
+function updateAuthUI() {
+  if (currentUser) {
+    userProfileBadge.classList.remove("hidden");
+    openAuthBtn.classList.add("hidden");
+    userNameDisplay.textContent = `👨‍🌾 ${currentUser.name}`;
+    if (detectedLocation && currentUser.location) {
+      detectedLocation.textContent = `Detected Region: ${currentUser.location}`;
+    }
+  } else {
+    userProfileBadge.classList.add("hidden");
+    openAuthBtn.classList.remove("hidden");
+    if (detectedLocation) {
+      detectedLocation.textContent = "Detected Region: Ahmednagar, Maharashtra";
+    }
+  }
+}
+
+/* ---------------- API CALLS ---------------- */
 
 async function askAssistant(query, location, npk) {
   const response = await fetch(`${API_BASE_URL}/assistant`, {
@@ -237,10 +422,14 @@ async function loadCommunityMessages() {
 
 async function sendCommunityMessage(message) {
   try {
+    const authorName = currentUser?.name
+      ? `${currentUser.name}${currentUser.location ? `, ${currentUser.location.split(",")[0]}` : ""}`
+      : "You";
+
     const response = await fetch(`${API_BASE_URL}/community/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ author: "You", message }),
+      body: JSON.stringify({ author: authorName, message }),
     });
     const data = await parseApiResponse(response);
     if (!response.ok) {
@@ -268,6 +457,8 @@ function renderCommunityMessages(messages) {
     .join("");
   chatFeed.scrollTop = chatFeed.scrollHeight;
 }
+
+/* ---------------- VOICE INPUT ---------------- */
 
 async function startVoiceInput(targetId) {
   const SpeechRecognition =
@@ -342,6 +533,8 @@ function escapeHtml(value) {
   div.innerText = value;
   return div.innerHTML;
 }
+
+/* ---------------- DISEASE & CAMERA HELPERS ---------------- */
 
 function fileToBase64Payload(file) {
   return new Promise((resolve, reject) => {

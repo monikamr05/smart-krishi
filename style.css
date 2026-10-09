@@ -18,6 +18,7 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(160deg, #0b1220 0%, #0f172a 100%);
   color: var(--text);
+  min-height: 100vh;
 }
 
 body.light {
@@ -41,7 +42,7 @@ body.light {
 .topbar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
 }
 
@@ -55,12 +56,61 @@ h1 {
   color: var(--muted);
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ghost-btn-sm {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ghost-btn-sm:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.primary-btn-sm {
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-dark);
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.primary-btn-sm:hover {
+  transform: translateY(-1px);
+}
+
 .ghost-btn {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   border-radius: 12px;
-  padding: 0.7rem 1rem;
+  padding: 0.65rem 1rem;
   cursor: pointer;
 }
 
@@ -79,6 +129,7 @@ h1 {
   color: var(--muted);
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .tab.active {
@@ -235,6 +286,11 @@ input {
   outline: none;
 }
 
+input:focus,
+select:focus {
+  border-color: var(--accent);
+}
+
 select {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -292,7 +348,7 @@ button {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #cameraCaptureBtn {
@@ -323,9 +379,136 @@ button {
   gap: 0.6rem;
 }
 
+/* ---------------- AUTH MODAL STYLES ---------------- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: min(440px, 92%);
+  padding: 1.6rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  animation: popUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: 0;
+  font-size: 1.6rem;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.2rem 0.5rem;
+}
+
+.close-modal-btn:hover {
+  color: var(--text);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.auth-tab {
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 0;
+  border-radius: 10px;
+  padding: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: var(--accent-dark);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.auth-submit-btn {
+  background: var(--accent);
+  color: var(--accent-dark);
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 0.8rem;
+  margin-top: 0.4rem;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.guest-btn {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.65rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+}
+
+.guest-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.auth-error {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @media (max-width: 760px) {
   .topbar {
     flex-direction: column;
+    align-items: flex-start;
   }
 
   .tabs {

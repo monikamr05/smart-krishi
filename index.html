@@ -13,7 +13,14 @@
           <h1>Smart Krishi Advisor</h1>
           <p>Decision support for small and marginal farmers</p>
         </div>
-        <button class="ghost-btn" id="themeToggle">Toggle Theme</button>
+        <div class="topbar-actions">
+          <div id="userProfileBadge" class="user-badge hidden">
+            <span id="userNameDisplay">👨‍🌾 Farmer</span>
+            <button class="ghost-btn-sm" id="logoutBtn" type="button">Logout</button>
+          </div>
+          <button class="primary-btn-sm" id="openAuthBtn" type="button">🔑 Farmer Login / Sign Up</button>
+          <button class="ghost-btn" id="themeToggle" type="button">Toggle Theme</button>
+        </div>
       </header>
 
       <nav class="tabs">
@@ -72,7 +79,7 @@
 
           <article class="card">
             <h3>Location & Weather Snapshot</h3>
-            <p class="muted">Detected Region: Ahmednagar, Maharashtra</p>
+            <p id="detectedLocation" class="muted">Detected Region: Ahmednagar, Maharashtra</p>
             <div class="weather-grid">
               <div class="weather-box">
                 <span>Rainfall</span>
@@ -98,18 +105,14 @@
             <h2>Chintak AI Assistant</h2>
             <p>
               Ask about irrigation schedules, fertilizer dosage, disease prevention,
-              weather planning, and market timing.
-            </p>
-            <p class="muted">
-              AI responses now come from backend API (`/api/assistant`) using secure
-              server-side Gemini key.
+              weather planning, and market timing. (Answers in English).
             </p>
             <div class="assistant-input-wrap">
               <div class="voice-field">
                 <input
                   id="assistantInput"
                   type="text"
-                  placeholder="Type or speak your farming question..."
+                  placeholder="Type or speak your farming question in English..."
                 />
                 <button class="mic-btn" data-voice-target="assistantInput">Mic</button>
               </div>
@@ -182,12 +185,68 @@
               </div>
             </div>
             <div class="chat-box">
-              <input id="chatInput" type="text" placeholder="Share your message..." />
+              <input id="chatInput" type="text" placeholder="Share your message with fellow farmers..." />
               <button id="chatSendBtn">Send</button>
             </div>
           </article>
         </section>
       </main>
+    </div>
+
+    <!-- Farmer Login / Register Modal -->
+    <div id="authModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="authModalTitle">👨‍🌾 Farmer Portal</h2>
+          <button class="close-modal-btn" id="closeAuthBtn" type="button">&times;</button>
+        </div>
+        
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLoginBtn" type="button">Sign In</button>
+          <button class="auth-tab" id="tabRegisterBtn" type="button">New Farmer Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="auth-form">
+          <div class="field">
+            <label for="loginContact">Mobile Number or Email</label>
+            <input id="loginContact" type="text" placeholder="e.g. 9876543210" required />
+          </div>
+          <div class="field">
+            <label for="loginPassword">Password / 4-digit PIN</label>
+            <input id="loginPassword" type="password" placeholder="Enter your password or PIN" required />
+          </div>
+          <p id="loginError" class="auth-error hidden"></p>
+          <button type="submit" class="auth-submit-btn">Sign In</button>
+          <button type="button" class="guest-btn" id="guestLoginBtn">Continue as Guest Explorer</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" class="auth-form hidden">
+          <div class="field">
+            <label for="regName">Farmer Full Name</label>
+            <input id="regName" type="text" placeholder="e.g. Ramesh Patil" required />
+          </div>
+          <div class="field">
+            <label for="regContact">Mobile Number or Email</label>
+            <input id="regContact" type="text" placeholder="e.g. 9876543210" required />
+          </div>
+          <div class="field">
+            <label for="regLocation">District / Region</label>
+            <input id="regLocation" type="text" placeholder="e.g. Ahmednagar, Maharashtra" required />
+          </div>
+          <div class="field">
+            <label for="regCrops">Primary Crops</label>
+            <input id="regCrops" type="text" placeholder="e.g. Wheat, Cotton, Soybean" />
+          </div>
+          <div class="field">
+            <label for="regPassword">Create Password or PIN</label>
+            <input id="regPassword" type="password" placeholder="Create a password" required />
+          </div>
+          <p id="regError" class="auth-error hidden"></p>
+          <button type="submit" class="auth-submit-btn">Register & Start Farming</button>
+        </form>
+      </div>
     </div>
 
     <script src="script.js"></script>
