@@ -363,8 +363,10 @@ function cleanAssistantAnswer(answer) {
   const text = String(answer || "").trim();
   const lines = text.split("\n");
   const cleaned = lines.filter((line, idx) => {
-    if (idx > 2) return true;
-    return !/^\s*(namaste|hello|hi|main chintak|i am chintak)/i.test(line.trim());
+    const trimmed = line.trim();
+    if (/^\s*(request tag:|req-\d+)/i.test(trimmed)) return false;
+    if (idx > 3) return true;
+    return !/^\s*(namaste|hello|hi|main chintak|i am chintak)/i.test(trimmed);
   });
   return cleaned.join("\n").trim() || text;
 }
