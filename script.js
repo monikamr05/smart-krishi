@@ -50,9 +50,41 @@ const userProfileBadge = document.getElementById("userProfileBadge");
 const userNameDisplay = document.getElementById("userNameDisplay");
 const logoutBtn = document.getElementById("logoutBtn");
 
+// Admin Elements
+const adminGateCard = document.getElementById("adminGateCard");
+const adminDashboardView = document.getElementById("adminDashboardView");
+const adminLoginForm = document.getElementById("adminLoginForm");
+const adminUsername = document.getElementById("adminUsername");
+const adminPassword = document.getElementById("adminPassword");
+const adminLoginError = document.getElementById("adminLoginError");
+const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+const statTotalFarmers = document.getElementById("statTotalFarmers");
+const statTotalAcres = document.getElementById("statTotalAcres");
+const statTotalInquiries = document.getElementById("statTotalInquiries");
+const statRegionsCount = document.getElementById("statRegionsCount");
+const farmerSearchInput = document.getElementById("farmerSearchInput");
+const farmerCropFilter = document.getElementById("farmerCropFilter");
+const farmersTableBody = document.getElementById("farmersTableBody");
+const openAddFarmerBtn = document.getElementById("openAddFarmerBtn");
+const exportFarmersBtn = document.getElementById("exportFarmersBtn");
+const addFarmerModal = document.getElementById("addFarmerModal");
+const closeAddFarmerBtn = document.getElementById("closeAddFarmerBtn");
+const addFarmerForm = document.getElementById("addFarmerForm");
+const newFarmerName = document.getElementById("newFarmerName");
+const newFarmerContact = document.getElementById("newFarmerContact");
+const newFarmerLocation = document.getElementById("newFarmerLocation");
+const newFarmerLand = document.getElementById("newFarmerLand");
+const newFarmerCrops = document.getElementById("newFarmerCrops");
+const newFarmerN = document.getElementById("newFarmerN");
+const newFarmerP = document.getElementById("newFarmerP");
+const newFarmerK = document.getElementById("newFarmerK");
+const addFarmerError = document.getElementById("addFarmerError");
+
 let activeCameraStream = null;
 let selectedDiseaseFile = null;
 let currentUser = null;
+let isAdminLoggedIn = false;
+let currentFarmersList = [];
 
 // Tab Navigation
 tabs.forEach((tab) => {
@@ -64,11 +96,16 @@ tabs.forEach((tab) => {
 
     tab.classList.add("active");
     document.getElementById(target).classList.add("active");
+
+    if (target === "admin" && isAdminLoggedIn) {
+      loadAdminDashboardData();
+    }
   });
 });
 
-// Initialize Authentication & Load Community Feed
+// Initialize Authentication & Load Feeds
 initAuth();
+initAdminPortal();
 loadCommunityMessages();
 
 // Camera & Disease Listeners
@@ -238,6 +275,250 @@ micButtons.forEach((button) => {
   });
 });
 
+/* ---------------- ADMIN & FARMERS DATABASE HANDLERS ---------------- */
+
+function initAdminPortal() {
+  const adminToken = localStorage.getItem("krishi_admin_token");
+  if (adminToken) {
+    isAdminLoggedIn = true;
+    showAdminDashboard();
+  }
+
+  adminLoginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = adminUsername.value.trim();
+    const password = adminPassword.value.trim();
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await parseApiResponse(response);
+      if (!response.ok) {
+        throw new Error(data.error || "Invalid admin credentials.");
+      }
+
+      localStorage.setItem("krishi_admin_token", data.token);
+      isAdminLoggedIn = true;
+      showAdminDashboard();
+    } catch (err) {
+      adminLoginError.textContent = err.message;
+      adminLoginError.classList.remove("hidden");
+    }
+  });
+
+  adminLogoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("krishi_admin_token");
+    isAdminLoggedIn = false;
+    adminDashboardView.classList.add("hidden");
+    adminGateCard.classList.remove("hidden");
+    adminPassword.value = "";
+  });
+
+  farmerSearchInput.addEventListener("input", () => filterFarmersTable());
+  farmerCropFilter.addEventListener("change", () => filterFarmersTable());
+
+  openAddFarmerBtn.addEventListener("click", () => {
+    addFarmerModal.classList.remove("hidden");
+  });
+
+  closeAddFarmerBtn.addEventListener("click", () => {
+    addFarmerModal.classList.add("hidden");
+    addFarmerError.classList.add("hidden");
+  });
+
+  exportFarmersBtn.addEventListener("click", () => exportFarmersToCSV());
+
+  addFarmerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = newFarmerName.value.trim();
+    const contact = newFarmerContact.value.trim();
+    const location = newFarmerLocation.value.trim();
+    const landArea = newFarmerLand.value.trim();
+    const crops = newFarmerCrops.value.trim();
+    const n = Number(newFarmerN.value || 60);
+    const p = Number(newFarmerP.value || 40);
+    const k = Number(newFarmerK.value || 40);
+
+    if (!name || !contact) {
+      addFarmerError.textContent = "Please provide Farmer Name and Contact.";
+      addFarmerError.classList.remove("hidden");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/farmers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          contact,
+          location,
+          landArea,
+          crops,
+          soilNPK: { n, p, k },
+        }),
+      });
+
+      const data = await parseApiResponse(response);
+      if (!response.ok) {
+        throw new Error(data.error || "Could not add farmer record.");
+      }
+
+      addFarmerForm.reset();
+      addFarmerModal.classList.add("hidden");
+      addFarmerError.classList.add("hidden");
+      loadAdminDashboardData();
+    } catch (err) {
+      addFarmerError.textContent = err.message;
+      addFarmerError.classList.remove("hidden");
+    }
+  });
+}
+
+function showAdminDashboard() {
+  adminGateCard.classList.add("hidden");
+  adminDashboardView.classList.remove("hidden");
+  loadAdminDashboardData();
+}
+
+async function loadAdminDashboardData() {
+  try {
+    // 1. Fetch Stats
+    const statsRes = await fetch(`${API_BASE_URL}/admin/stats`);
+    const statsData = await parseApiResponse(statsRes);
+    if (statsRes.ok) {
+      statTotalFarmers.textContent = statsData.totalFarmers || "0";
+      statTotalAcres.textContent = statsData.totalAcres || "0 Acres";
+      statTotalInquiries.textContent = `${statsData.totalInquiries || 0}+`;
+      statRegionsCount.textContent = `${statsData.regionsCount || 0} Districts`;
+    }
+
+    // 2. Fetch Farmers Table
+    const farmersRes = await fetch(`${API_BASE_URL}/farmers`);
+    const farmersData = await parseApiResponse(farmersRes);
+    if (farmersRes.ok) {
+      currentFarmersList = farmersData.farmers || [];
+      renderFarmersTable(currentFarmersList);
+    }
+  } catch (err) {
+    console.error("Admin data load error:", err);
+  }
+}
+
+function renderFarmersTable(farmers) {
+  if (!farmers || farmers.length === 0) {
+    farmersTableBody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center; padding: 2rem; color: var(--muted);">
+          No farmer records found matching the criteria.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  farmersTableBody.innerHTML = farmers
+    .map((f) => {
+      const cropsHtml = (f.crops || [])
+        .map((c) => `<span class="crop-tag">${escapeHtml(c)}</span>`)
+        .join("");
+
+      const npkText = f.soilNPK ? `N:${f.soilNPK.n} P:${f.soilNPK.p} K:${f.soilNPK.k}` : "N/A";
+
+      return `
+      <tr>
+        <td><strong>${escapeHtml(f.id)}</strong></td>
+        <td>
+          <div style="font-weight: 700;">${escapeHtml(f.name)}</div>
+          <small class="muted">${escapeHtml(f.contact)}</small>
+        </td>
+        <td>${escapeHtml(f.location)}</td>
+        <td>${escapeHtml(f.landArea || "N/A")}</td>
+        <td>${cropsHtml || "Mixed"}</td>
+        <td><small style="background: var(--surface-2); padding: 3px 6px; border-radius: 6px;">${npkText}</small></td>
+        <td><span class="status-pill">${escapeHtml(f.status || "Active")}</span></td>
+        <td>
+          <button class="btn-delete" onclick="deleteFarmerRecord('${escapeHtml(f.id)}')">Delete</button>
+        </td>
+      </tr>
+    `;
+    })
+    .join("");
+}
+
+function filterFarmersTable() {
+  const search = farmerSearchInput.value.trim().toLowerCase();
+  const crop = farmerCropFilter.value.trim().toLowerCase();
+
+  const filtered = currentFarmersList.filter((f) => {
+    const matchesSearch =
+      !search ||
+      f.name.toLowerCase().includes(search) ||
+      f.contact.includes(search) ||
+      f.location.toLowerCase().includes(search) ||
+      f.id.toLowerCase().includes(search);
+
+    const matchesCrop =
+      !crop || (f.crops || []).some((c) => c.toLowerCase().includes(crop));
+
+    return matchesSearch && matchesCrop;
+  });
+
+  renderFarmersTable(filtered);
+}
+
+window.deleteFarmerRecord = async function (id) {
+  if (!confirm(`Are you sure you want to delete farmer record ${id}?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/farmers/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    const data = await parseApiResponse(res);
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to delete farmer record.");
+    }
+    loadAdminDashboardData();
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+function exportFarmersToCSV() {
+  if (!currentFarmersList || currentFarmersList.length === 0) {
+    alert("No farmer data to export.");
+    return;
+  }
+
+  const headers = ["ID", "Name", "Contact", "Location", "Land Area", "Crops", "Soil N", "Soil P", "Soil K", "Registered Date"];
+  const rows = currentFarmersList.map((f) => [
+    f.id,
+    `"${f.name}"`,
+    f.contact,
+    `"${f.location}"`,
+    `"${f.landArea}"`,
+    `"${(f.crops || []).join(", ")}"`,
+    f.soilNPK?.n || "",
+    f.soilNPK?.p || "",
+    f.soilNPK?.k || "",
+    f.registeredDate || "",
+  ]);
+
+  const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `farmers_registry_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 /* ---------------- AUTHENTICATION HANDLERS ---------------- */
 
 function initAuth() {
@@ -298,7 +579,6 @@ function initAuth() {
       return;
     }
 
-    // Check against registered users or create login session
     const registeredUsers = JSON.parse(localStorage.getItem("krishi_registered_users") || "[]");
     const existing = registeredUsers.find((u) => u.contact === contact);
 
@@ -321,7 +601,7 @@ function initAuth() {
     hideAuthModal();
   });
 
-  registerForm.addEventListener("submit", (e) => {
+  registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = regName.value.trim();
     const contact = regContact.value.trim();
@@ -337,7 +617,6 @@ function initAuth() {
     const newUser = { name, contact, location, crops, password };
     const registeredUsers = JSON.parse(localStorage.getItem("krishi_registered_users") || "[]");
     
-    // Check if already registered
     const idx = registeredUsers.findIndex((u) => u.contact === contact);
     if (idx !== -1) {
       registeredUsers[idx] = newUser;
@@ -349,6 +628,24 @@ function initAuth() {
     currentUser = newUser;
     localStorage.setItem("krishi_user", JSON.stringify(newUser));
     localStorage.setItem("krishi_has_visited", "true");
+
+    // Also auto-sync new registered farmer to backend database
+    try {
+      await fetch(`${API_BASE_URL}/farmers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          contact,
+          location,
+          crops,
+          landArea: "3.0 Acres",
+        }),
+      });
+    } catch (err) {
+      console.error("Auto-sync farmer error:", err);
+    }
+
     updateAuthUI();
     hideAuthModal();
   });

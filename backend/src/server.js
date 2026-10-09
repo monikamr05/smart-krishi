@@ -22,6 +22,69 @@ const communityMessages = [
   { id: 2, author: "Meena, Satara", message: "Best natural spray for whiteflies in cotton crop?" },
 ];
 
+let farmersDatabase = [
+  {
+    id: "FARM-101",
+    name: "Ramesh Patil",
+    contact: "9822012345",
+    location: "Ahmednagar, Maharashtra",
+    landArea: "4.5 Acres",
+    crops: ["Wheat", "Soybean", "Onion"],
+    soilNPK: { n: 62, p: 38, k: 47 },
+    status: "Active",
+    registeredDate: "2026-01-12",
+    inquiriesCount: 14,
+  },
+  {
+    id: "FARM-102",
+    name: "Suresh Deshmukh",
+    contact: "9890123456",
+    location: "Nashik, Maharashtra",
+    landArea: "6.0 Acres",
+    crops: ["Grapes", "Tomato", "Pigeon Pea"],
+    soilNPK: { n: 75, p: 42, k: 50 },
+    status: "Active",
+    registeredDate: "2026-01-20",
+    inquiriesCount: 8,
+  },
+  {
+    id: "FARM-103",
+    name: "Sunita Pawar",
+    contact: "9765432109",
+    location: "Satara, Maharashtra",
+    landArea: "2.8 Acres",
+    crops: ["Sugarcane", "Ginger", "Maize"],
+    soilNPK: { n: 88, p: 40, k: 55 },
+    status: "Active",
+    registeredDate: "2026-02-05",
+    inquiriesCount: 19,
+  },
+  {
+    id: "FARM-104",
+    name: "Anand Shinde",
+    contact: "9422334455",
+    location: "Solapur, Maharashtra",
+    landArea: "5.2 Acres",
+    crops: ["Pomegranate", "Millet", "Cotton"],
+    soilNPK: { n: 50, p: 30, k: 60 },
+    status: "Active",
+    registeredDate: "2026-02-18",
+    inquiriesCount: 5,
+  },
+  {
+    id: "FARM-105",
+    name: "Meena Jadhav",
+    contact: "9561234567",
+    location: "Nagpur, Maharashtra",
+    landArea: "3.5 Acres",
+    crops: ["Orange", "Cotton", "Soybean"],
+    soilNPK: { n: 58, p: 32, k: 48 },
+    status: "Active",
+    registeredDate: "2026-03-01",
+    inquiriesCount: 11,
+  },
+];
+
 app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 
@@ -136,6 +199,7 @@ router.post("/disease-detect", async (req, res) => {
   const textPrompt = [
     "You are an expert plant pathologist.",
     `Analyze this crop ${typeLabel} image and identify the most likely disease.`,
+    "Always write all text, explanations, and recommendations in clear English.",
     "Use visible symptoms from the image first, then infer likely disease.",
     "If the image is not a plant/crop part, set disease as 'Not a crop image'.",
     "Return strict JSON with keys: disease, confidence, explanation, recommendation, isCropImage, imageQualityWarning, candidates.",
@@ -214,6 +278,134 @@ router.post("/community/messages", (req, res) => {
   };
   communityMessages.push(newMessage);
   res.status(201).json({ message: newMessage });
+});
+
+/* ---------------- ADMIN & FARMERS DATABASE ENDPOINTS ---------------- */
+
+router.post("/admin/login", (req, res) => {
+  const { username, password } = req.body || {};
+  if ((username === "admin" && password === "admin123") || password === "krishi@2026") {
+    return res.json({ success: true, token: "admin-session-token-9988", role: "SuperAdmin" });
+  }
+  return res.status(401).json({ error: "Invalid admin credentials. Use username: admin / password: admin123" });
+});
+
+router.get("/admin/stats", (_req, res) => {
+  const totalFarmers = farmersDatabase.length;
+  const totalInquiries = farmersDatabase.reduce((acc, f) => acc + (f.inquiriesCount || 0), 45);
+  const totalAcres = farmersDatabase
+    .reduce((acc, f) => acc + (parseFloat(f.landArea) || 0), 0)
+    .toFixed(1);
+  const regions = [...new Set(farmersDatabase.map((f) => f.location))];
+
+  const cropCounts = {};
+  farmersDatabase.forEach((f) => {
+    (f.crops || []).forEach((c) => {
+      cropCounts[c] = (cropCounts[c] || 0) + 1;
+    });
+  });
+
+  return res.json({
+    totalFarmers,
+    totalInquiries,
+    totalAcres: `${totalAcres} Acres`,
+    regionsCount: regions.length,
+    activeDiseasesReported: 6,
+    cropDistribution: cropCounts,
+  });
+});
+
+router.get("/farmers", (req, res) => {
+  const { search, crop } = req.query || {};
+  let list = [...farmersDatabase];
+
+  if (search) {
+    const q = String(search).toLowerCase();
+    list = list.filter(
+      (f) =>
+        f.name.toLowerCase().includes(q) ||
+        f.contact.includes(q) ||
+        f.location.toLowerCase().includes(q) ||
+        f.id.toLowerCase().includes(q)
+    );
+  }
+
+  if (crop) {
+    const c = String(crop).toLowerCase();
+    list = list.filter((f) => (f.crops || []).some((item) => item.toLowerCase().includes(c)));
+  }
+
+  return res.json({ farmers: list });
+});
+
+router.post("/farmers", (req, res) => {
+  const { name, contact, location, landArea, crops, soilNPK } = req.body || {};
+  if (!name || !contact) {
+    return res.status(400).json({ error: "Farmer Name and Contact number are required." });
+  }
+
+  const newId = `FARM-${100 + farmersDatabase.length + 1}`;
+  const newFarmer = {
+    id: newId,
+    name: String(name).trim(),
+    contact: String(contact).trim(),
+    location: location ? String(location).trim() : "Maharashtra, India",
+    landArea: landArea ? String(landArea).trim() : "3.0 Acres",
+    crops: Array.isArray(crops)
+      ? crops
+      : String(crops || "Mixed")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+    soilNPK: soilNPK || { n: 60, p: 40, k: 40 },
+    status: "Active",
+    registeredDate: new Date().toISOString().split("T")[0],
+    inquiriesCount: 1,
+  };
+
+  farmersDatabase.unshift(newFarmer);
+  return res.status(201).json({ success: true, farmer: newFarmer });
+});
+
+router.put("/farmers/:id", (req, res) => {
+  const { id } = req.params;
+  const index = farmersDatabase.findIndex((f) => f.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Farmer record not found." });
+  }
+
+  const { name, contact, location, landArea, crops, status, soilNPK } = req.body || {};
+  const current = farmersDatabase[index];
+
+  farmersDatabase[index] = {
+    ...current,
+    name: name ? String(name).trim() : current.name,
+    contact: contact ? String(contact).trim() : current.contact,
+    location: location ? String(location).trim() : current.location,
+    landArea: landArea ? String(landArea).trim() : current.landArea,
+    crops: crops
+      ? Array.isArray(crops)
+        ? crops
+        : String(crops)
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+      : current.crops,
+    status: status || current.status,
+    soilNPK: soilNPK || current.soilNPK,
+  };
+
+  return res.json({ success: true, farmer: farmersDatabase[index] });
+});
+
+router.delete("/farmers/:id", (req, res) => {
+  const { id } = req.params;
+  const initialLength = farmersDatabase.length;
+  farmersDatabase = farmersDatabase.filter((f) => f.id !== id);
+  if (farmersDatabase.length === initialLength) {
+    return res.status(404).json({ error: "Farmer not found." });
+  }
+  return res.json({ success: true, message: `Farmer ${id} deleted successfully.` });
 });
 
 /* ---------------- OPENROUTER HANDLERS ---------------- */

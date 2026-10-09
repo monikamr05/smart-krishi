@@ -11,7 +11,7 @@
       <header class="topbar">
         <div>
           <h1>Smart Krishi Advisor</h1>
-          <p>Decision support for small and marginal farmers</p>
+          <p>Decision support & database management for agriculture</p>
         </div>
         <div class="topbar-actions">
           <div id="userProfileBadge" class="user-badge hidden">
@@ -27,9 +27,11 @@
         <button class="tab active" data-tab="dashboard">Dashboard</button>
         <button class="tab" data-tab="assistant">Chintak AI</button>
         <button class="tab" data-tab="community">Community</button>
+        <button class="tab" data-tab="admin">🛡️ Admin Portal</button>
       </nav>
 
       <main>
+        <!-- DASHBOARD TAB -->
         <section class="tab-panel active" id="dashboard">
           <article class="card hero">
             <h2>Crop Recommendation Engine</h2>
@@ -100,6 +102,7 @@
           </article>
         </section>
 
+        <!-- CHINTAK AI ASSISTANT TAB -->
         <section class="tab-panel" id="assistant">
           <article class="card">
             <h2>Chintak AI Assistant</h2>
@@ -170,6 +173,7 @@
           </article>
         </section>
 
+        <!-- COMMUNITY FORUM TAB -->
         <section class="tab-panel" id="community">
           <article class="card">
             <h2>Farmer Community Forum</h2>
@@ -189,6 +193,108 @@
               <button id="chatSendBtn">Send</button>
             </div>
           </article>
+        </section>
+
+        <!-- ADMIN PORTAL & FARMERS DATABASE TAB -->
+        <section class="tab-panel" id="admin">
+          <!-- Admin Login Gate -->
+          <div id="adminGateCard" class="card">
+            <h2>🛡️ Admin Authentication</h2>
+            <p class="muted">Access the centralized Farmer Database and Agricultural analytics dashboard.</p>
+            <form id="adminLoginForm" class="auth-form" style="max-width: 380px; margin-top: 1rem;">
+              <div class="field">
+                <label for="adminUsername">Admin Username</label>
+                <input id="adminUsername" type="text" value="admin" placeholder="admin" required />
+              </div>
+              <div class="field">
+                <label for="adminPassword">Admin Password</label>
+                <input id="adminPassword" type="password" placeholder="admin123" required />
+              </div>
+              <p id="adminLoginError" class="auth-error hidden"></p>
+              <button type="submit" class="auth-submit-btn">Login to Admin Portal</button>
+              <small class="muted" style="margin-top: 0.4rem; display: block;">Default credentials: <strong>admin</strong> / <strong>admin123</strong></small>
+            </form>
+          </div>
+
+          <!-- Admin Dashboard View -->
+          <div id="adminDashboardView" class="hidden">
+            <div class="admin-header-row">
+              <div>
+                <h2>🌾 Farmers Database & Analytics</h2>
+                <p class="muted">Centralized registry of farmers, land records, crop distribution, and soil metrics.</p>
+              </div>
+              <button class="ghost-btn-sm" id="adminLogoutBtn" type="button">Exit Admin Mode</button>
+            </div>
+
+            <!-- Stats KPI Cards -->
+            <div class="admin-stats-grid">
+              <div class="admin-stat-card">
+                <span class="stat-label">Total Registered Farmers</span>
+                <strong class="stat-number" id="statTotalFarmers">5</strong>
+                <small class="stat-caption">Verified agricultural profiles</small>
+              </div>
+              <div class="admin-stat-card">
+                <span class="stat-label">Total Farmland Tracked</span>
+                <strong class="stat-number" id="statTotalAcres">22.0 Acres</strong>
+                <small class="stat-caption">Across Maharashtra state</small>
+              </div>
+              <div class="admin-stat-card">
+                <span class="stat-label">AI Queries Resolved</span>
+                <strong class="stat-number" id="statTotalInquiries">57+</strong>
+                <small class="stat-caption">Irrigation, Fertilizer & Diseases</small>
+              </div>
+              <div class="admin-stat-card">
+                <span class="stat-label">Monitored Regions</span>
+                <strong class="stat-number" id="statRegionsCount">5 Districts</strong>
+                <small class="stat-caption">Real-time weather tracking</small>
+              </div>
+            </div>
+
+            <!-- Farmers Management Directory -->
+            <article class="card">
+              <div class="directory-toolbar">
+                <div class="toolbar-search-wrap">
+                  <input id="farmerSearchInput" type="text" placeholder="Search by name, phone, or region..." />
+                  <select id="farmerCropFilter">
+                    <option value="">All Crops</option>
+                    <option value="Wheat">Wheat</option>
+                    <option value="Soybean">Soybean</option>
+                    <option value="Cotton">Cotton</option>
+                    <option value="Sugarcane">Sugarcane</option>
+                    <option value="Onion">Onion</option>
+                    <option value="Grapes">Grapes</option>
+                  </select>
+                </div>
+                <div class="toolbar-actions">
+                  <button id="openAddFarmerBtn" class="primary-btn-sm" type="button">➕ Add Farmer Record</button>
+                  <button id="exportFarmersBtn" class="ghost-btn-sm" type="button">📥 Export CSV</button>
+                </div>
+              </div>
+
+              <!-- Farmers Data Table -->
+              <div class="table-container">
+                <table class="farmers-table">
+                  <thead>
+                    <tr>
+                      <th>Farmer ID</th>
+                      <th>Name & Contact</th>
+                      <th>District / Location</th>
+                      <th>Land Size</th>
+                      <th>Primary Crops</th>
+                      <th>Soil NPK</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="farmersTableBody">
+                    <tr>
+                      <td colspan="8" style="text-align: center; padding: 2rem;">Loading farmers database...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
         </section>
       </main>
     </div>
@@ -245,6 +351,55 @@
           </div>
           <p id="regError" class="auth-error hidden"></p>
           <button type="submit" class="auth-submit-btn">Register & Start Farming</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add / Edit Farmer Record Modal -->
+    <div id="addFarmerModal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="addFarmerModalTitle">➕ Add Farmer Record</h2>
+          <button class="close-modal-btn" id="closeAddFarmerBtn" type="button">&times;</button>
+        </div>
+        
+        <form id="addFarmerForm" class="auth-form">
+          <div class="field">
+            <label for="newFarmerName">Farmer Full Name</label>
+            <input id="newFarmerName" type="text" placeholder="e.g. Vikram Shinde" required />
+          </div>
+          <div class="field">
+            <label for="newFarmerContact">Contact Number</label>
+            <input id="newFarmerContact" type="text" placeholder="e.g. 9822334455" required />
+          </div>
+          <div class="field">
+            <label for="newFarmerLocation">District / State</label>
+            <input id="newFarmerLocation" type="text" placeholder="e.g. Kolhapur, Maharashtra" required />
+          </div>
+          <div class="field">
+            <label for="newFarmerLand">Farm Size (Acres)</label>
+            <input id="newFarmerLand" type="text" placeholder="e.g. 4.0 Acres" required />
+          </div>
+          <div class="field">
+            <label for="newFarmerCrops">Crops Grown (comma-separated)</label>
+            <input id="newFarmerCrops" type="text" placeholder="e.g. Sugarcane, Maize, Soybean" required />
+          </div>
+          <div class="npk-form">
+            <div class="field">
+              <label for="newFarmerN">N</label>
+              <input id="newFarmerN" type="number" placeholder="60" value="60" />
+            </div>
+            <div class="field">
+              <label for="newFarmerP">P</label>
+              <input id="newFarmerP" type="number" placeholder="40" value="40" />
+            </div>
+            <div class="field">
+              <label for="newFarmerK">K</label>
+              <input id="newFarmerK" type="number" placeholder="40" value="40" />
+            </div>
+          </div>
+          <p id="addFarmerError" class="auth-error hidden"></p>
+          <button type="submit" class="auth-submit-btn">Save Farmer Record</button>
         </form>
       </div>
     </div>
