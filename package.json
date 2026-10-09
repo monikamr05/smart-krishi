@@ -3,14 +3,12 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "node backend/src/server.js",
-    "dev": "node --watch backend/src/server.js",
+    "start": "node api/index.js",
+    "dev": "node --watch api/index.js",
     "expo:start": "expo start",
     "expo:android": "expo start --android",
     "expo:ios": "expo start --ios",
-    "expo:web": "expo start --web",
-    "backend": "npm --prefix backend run dev",
-    "backend:start": "npm --prefix backend run start"
+    "expo:web": "expo start --web"
   },
   "dependencies": {
     "cors": "^2.8.6",
