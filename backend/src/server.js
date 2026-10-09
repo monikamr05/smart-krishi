@@ -1,4 +1,9 @@
+const path = require("path");
+// Support loading .env from root, backend/, and current directory
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const { predictCrops } = require("./cropModel");
@@ -9,6 +14,8 @@ const router = express.Router();
 const PORT = process.env.PORT || 4000;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
 
 const communityMessages = [
   { id: 1, author: "Ravi, Nashik", message: "Anyone using drip irrigation for summer onion?" },
@@ -19,7 +26,14 @@ app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 
 router.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "smart-agri-backend" });
+  res.json({
+    ok: true,
+    service: "smart-agri-backend",
+    providers: {
+      gemini: Boolean(GEMINI_API_KEY),
+      openrouter: Boolean(OPENROUTER_API_KEY),
+    },
+  });
 });
 
 router.post("/recommend-crops", (req, res) => {
@@ -45,8 +59,13 @@ router.post("/assistant", async (req, res) => {
     return res.status(400).json({ error: "Query is required." });
   }
 
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: "Server GEMINI_API_KEY is not configured." });
+  const apiKeyGemini = process.env.GEMINI_API_KEY || GEMINI_API_KEY;
+  const apiKeyOpenRouter = process.env.OPENROUTER_API_KEY || OPENROUTER_API_KEY;
+
+  if (!apiKeyGemini && !apiKeyOpenRouter) {
+    return res.status(500).json({
+      error: "AI API Key is not configured. Please set GEMINI_API_KEY or OPENROUTER_API_KEY in your .env file or Vercel environment variables.",
+    });
   }
 
   const requestTag = `req-${Date.now()}`;
@@ -66,12 +85,30 @@ router.post("/assistant", async (req, res) => {
     .join("\n");
 
   try {
-    const modelCandidates = [GEMINI_MODEL, "gemini-2.0-flash", "gemini-2.0-flash-lite"];
-    const { answer, lastError } = await generateWithFallback([{ text: prompt }], modelCandidates);
+    let answer = "";
+    let lastError = "";
+
+    // 1. Try OpenRouter if configured
+    if (apiKeyOpenRouter) {
+      try {
+        answer = await callOpenRouterText(prompt, apiKeyOpenRouter);
+      } catch (err) {
+        lastError = `OpenRouter error: ${err.message}`;
+        console.error(lastError);
+      }
+    }
+
+    // 2. Fallback to Gemini if OpenRouter didn't return answer and Gemini key exists
+    if (!answer && apiKeyGemini) {
+      const modelCandidates = [process.env.GEMINI_MODEL || GEMINI_MODEL, "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+      const resGemini = await generateWithGeminiFallback([{ text: prompt }], modelCandidates, apiKeyGemini);
+      answer = resGemini.answer;
+      if (!answer) lastError = resGemini.lastError || lastError;
+    }
 
     if (!answer) {
       return res.status(502).json({
-        error: `Gemini returned empty response.${lastError ? ` Last error: ${lastError}` : ""}`,
+        error: `AI returned empty response.${lastError ? ` Details: ${lastError}` : ""}`,
       });
     }
 
@@ -87,8 +124,13 @@ router.post("/disease-detect", async (req, res) => {
     return res.status(400).json({ error: "Image payload is required." });
   }
 
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: "Server GEMINI_API_KEY is not configured." });
+  const apiKeyGemini = process.env.GEMINI_API_KEY || GEMINI_API_KEY;
+  const apiKeyOpenRouter = process.env.OPENROUTER_API_KEY || OPENROUTER_API_KEY;
+
+  if (!apiKeyGemini && !apiKeyOpenRouter) {
+    return res.status(500).json({
+      error: "AI API Key is not configured. Please set GEMINI_API_KEY or OPENROUTER_API_KEY in your .env file or Vercel environment variables.",
+    });
   }
 
   const typeLabel = partType === "fruit" ? "fruit" : "leaf";
@@ -103,23 +145,41 @@ router.post("/disease-detect", async (req, res) => {
     "If disease is unclear, set disease to 'Uncertain' and give safe next steps.",
   ].join("\n");
 
-  const modelCandidates = [GEMINI_MODEL, "gemini-2.0-flash", "gemini-2.0-flash-lite"];
-  const parts = [
-    { text: textPrompt },
-    {
-      inlineData: {
-        mimeType: image.mimeType,
-        data: image.data,
-      },
-    },
-  ];
-
   try {
-    const { answer, lastError } = await generateWithFallback(parts, modelCandidates);
+    let answer = "";
+    let lastError = "";
+
+    // 1. Try OpenRouter Vision if configured
+    if (apiKeyOpenRouter) {
+      try {
+        answer = await callOpenRouterVision(textPrompt, image, apiKeyOpenRouter);
+      } catch (err) {
+        lastError = `OpenRouter Vision error: ${err.message}`;
+        console.error(lastError);
+      }
+    }
+
+    // 2. Fallback to Gemini Vision if needed
+    if (!answer && apiKeyGemini) {
+      const modelCandidates = [process.env.GEMINI_MODEL || GEMINI_MODEL, "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+      const parts = [
+        { text: textPrompt },
+        {
+          inlineData: {
+            mimeType: image.mimeType,
+            data: image.data,
+          },
+        },
+      ];
+      const resGemini = await generateWithGeminiFallback(parts, modelCandidates, apiKeyGemini);
+      answer = resGemini.answer;
+      if (!answer) lastError = resGemini.lastError || lastError;
+    }
+
     if (!answer) {
-      return res
-        .status(502)
-        .json({ error: `Disease model empty response.${lastError ? ` Last error: ${lastError}` : ""}` });
+      return res.status(502).json({
+        error: `Disease detection empty response.${lastError ? ` Details: ${lastError}` : ""}`,
+      });
     }
 
     const parsed = parseDiseaseAnswer(answer);
@@ -157,22 +217,90 @@ router.post("/community/messages", (req, res) => {
   res.status(201).json({ message: newMessage });
 });
 
-async function generateWithFallback(parts, modelCandidates) {
+/* ---------------- OPENROUTER HANDLERS ---------------- */
+
+async function callOpenRouterText(prompt, apiKey) {
+  const model = process.env.OPENROUTER_MODEL || OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://smart-krishi.vercel.app",
+      "X-Title": "Smart Krishi Advisor",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.2,
+      max_tokens: 512,
+    }),
+  });
+
+  if (!response.ok) {
+    const raw = await response.text();
+    throw new Error(`OpenRouter HTTP ${response.status}: ${raw}`);
+  }
+
+  const data = await response.json();
+  return data?.choices?.[0]?.message?.content || "";
+}
+
+async function callOpenRouterVision(textPrompt, image, apiKey) {
+  const model = process.env.OPENROUTER_MODEL || OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
+  const imageUrl = `data:${image.mimeType};base64,${image.data}`;
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://smart-krishi.vercel.app",
+      "X-Title": "Smart Krishi Advisor",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: textPrompt },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ],
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 512,
+    }),
+  });
+
+  if (!response.ok) {
+    const raw = await response.text();
+    throw new Error(`OpenRouter Vision HTTP ${response.status}: ${raw}`);
+  }
+
+  const data = await response.json();
+  return data?.choices?.[0]?.message?.content || "";
+}
+
+/* ---------------- GEMINI HANDLERS ---------------- */
+
+async function generateWithGeminiFallback(parts, modelCandidates, apiKey) {
   let lastError = "";
   const tried = new Set();
 
   for (const candidate of modelCandidates) {
     if (!candidate || tried.has(candidate)) continue;
     tried.add(candidate);
-    const result = await tryGenerateContent(candidate, parts);
+    const result = await tryGenerateGeminiContent(candidate, parts, apiKey);
     if (result.answer) return { answer: result.answer, lastError: "" };
     lastError = result.error || lastError;
   }
 
-  const discoveredModels = await fetchGenerateSupportedModels();
+  const discoveredModels = await fetchGeminiSupportedModels(apiKey);
   for (const model of discoveredModels) {
     if (tried.has(model)) continue;
-    const result = await tryGenerateContent(model, parts);
+    const result = await tryGenerateGeminiContent(model, parts, apiKey);
     if (result.answer) return { answer: result.answer, lastError: "" };
     lastError = result.error || lastError;
   }
@@ -180,10 +308,10 @@ async function generateWithFallback(parts, modelCandidates) {
   return { answer: "", lastError };
 }
 
-async function tryGenerateContent(model, parts) {
+async function tryGenerateGeminiContent(model, parts, apiKey) {
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
-      GEMINI_API_KEY
+      apiKey
     )}`;
 
     const response = await fetch(endpoint, {
@@ -210,6 +338,24 @@ async function tryGenerateContent(model, parts) {
     return { answer, error: "" };
   } catch (error) {
     return { answer: "", error: `Model ${model} request error: ${error.message}` };
+  }
+}
+
+async function fetchGeminiSupportedModels(apiKey) {
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(
+      apiKey
+    )}`;
+    const response = await fetch(endpoint);
+    if (!response.ok) return [];
+    const data = await response.json();
+    const models = (data?.models || [])
+      .filter((m) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes("generateContent"))
+      .map((m) => String(m.name || "").replace("models/", ""))
+      .filter(Boolean);
+    return models;
+  } catch {
+    return [];
   }
 }
 
@@ -258,24 +404,6 @@ function normalizeCandidates(candidates) {
     }))
     .filter((item) => item.name)
     .slice(0, 3);
-}
-
-async function fetchGenerateSupportedModels() {
-  try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(
-      GEMINI_API_KEY
-    )}`;
-    const response = await fetch(endpoint);
-    if (!response.ok) return [];
-    const data = await response.json();
-    const models = (data?.models || [])
-      .filter((m) => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes("generateContent"))
-      .map((m) => String(m.name || "").replace("models/", ""))
-      .filter(Boolean);
-    return models;
-  } catch {
-    return [];
-  }
 }
 
 function parseJsonAnswer(text) {
